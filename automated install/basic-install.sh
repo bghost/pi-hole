@@ -82,7 +82,40 @@ show_ascii_berry() {
 
 # Compatibility
 distro_check() {
-if command -v apt-get &> /dev/null; then
+if command -v xbps-install &> /dev/null; then
+  #void
+  #############################################
+  PKG_MANAGER="xbps"
+  UPDATE_PKG_CACHE="${PKG_MANAGER}-install --sync"
+  PKG_INSTALL=(${PKG_MANAGER}-install --yes)
+  # grep -c will return 1 retVal on 0 matches, block this throwing the set -e with an OR TRUE
+  PKG_COUNT="${PKG_MANAGER} -s -o Debug::NoLocking=true upgrade | grep -c ^Inst || true"
+  # #########################################
+  # fixes for dependency differences
+  iproute_pkg="iproute2"
+  # Prefer the php metapackage if it's there, fall back on the php5 packages
+  phpVer="php"
+  # #########################################
+  INSTALLER_DEPS=(dialog dhcpcd git ${iproute_pkg})
+  PIHOLE_DEPS=(bc cronie curl dnsmasq dnsutils iputils lsof libressl-netcat sudo unzip wget)
+  PIHOLE_WEB_DEPS=(lighttpd ${phpVer}-cgi)
+  LIGHTTPD_USER="www-data"
+  LIGHTTPD_GROUP="www-data"
+  LIGHTTPD_CFG="lighttpd.conf.debian"
+  DNSMASQ_USER="dnsmasq"
+
+#  test_dpkg_lock() {
+#    i=0
+#    while fuser /var/lib/dpkg/lock >/dev/null 2>&1 ; do
+#      sleep 0.5
+#      ((i=i+1))
+#    done
+#    # Always return success, since we only return if there is no
+#    # lock (anymore)
+#    return 0
+#  }
+
+elif command -v apt-get &> /dev/null; then
   #Debian Family
   #############################################
   PKG_MANAGER="apt-get"
